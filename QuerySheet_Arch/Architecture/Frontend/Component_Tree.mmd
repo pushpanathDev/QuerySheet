@@ -1,0 +1,45 @@
+---
+config:
+  layout: fixed
+---
+flowchart TB
+    main["main.jsx — src/main.jsx<br>Entry: creates React root, renders App in StrictMode"] --> App["App — src/App.jsx<br>hooks: useAuth<br>stores: authStore via selectAuthStatus<br>inline components: RootRedirect, PublicOnlyRoute"]
+    App -. calls once on mount .-> useAuth["useAuth — src/hooks/useAuth.js<br>firebase: onAuthStateChanged(auth)<br>WRITES authStore: setUser(user, token)<br>WRITES authStore: clearUser()"]
+    App --> EB_root["ErrorBoundary (root)<br>src/components/common/ErrorBoundary.jsx<br>props: children, fallback?, onError?, onReset?<br>fallback can be ReactNode or render-prop function"]
+    EB_root --> EB_reg["ErrorBoundary (wraps /register route)"] & EB_login["ErrorBoundary (wraps /login route)"] & ProtectedRoute["ProtectedRoute<br>src/components/common/ProtectedRoute.jsx<br>stores READ: authStore(selectAuthStatus)<br>loading → FullScreenSpinner<br>anon → Navigate to /login"]
+    EB_login -- route /login — wrapped in PublicOnlyRoute guard --> LoginPage["LoginPage — src/pages/Login.page.jsx<br>props: none  custom hooks: none<br>api: loginWithEmailPassword(email, password)<br>firebase: signInWithGoogle()<br>validation: email + password non-empty"]
+    EB_reg -- route /register — no PublicOnlyRoute guard --> RegisterPage["RegisterPage — src/pages/Register.page.jsx<br>props: none  custom hooks: none<br>api: registerUser(email, password, displayName)<br>firebase: signInWithGoogle()<br>validation: name, email, pw min 8, pw match"]
+    ProtectedRoute --> AppLayout["AppLayout<br>src/components/common/AppLayout.jsx<br>stores READ: authStore.user, analysisStore.analysisId<br>stores WRITE: authStore.clearUser()<br>firebase: signOut() — renders sticky nav + Outlet"] & EB_chat["ErrorBoundary (wraps /chat route)"]
+    AppLayout --> EB_dash["ErrorBoundary (wraps /dashboard route)"] & EB_upload["ErrorBoundary (wraps /upload route)"]
+    EB_dash -- route /dashboard --> DashboardPage["DashboardPage — src/pages/Dashboard.page.jsx<br>props: none  custom hooks: none<br>stores READ: analysisStore<br>  analysisId, datasetName, rowCount,<br>  headers, insights, chartData, aiSummary"]
+    EB_upload -- route /upload --> UploadPage["UploadPage — src/pages/Upload.page.jsx<br>props: none  custom hooks: none<br>stores WRITE: analysisStore.setAnalysis(result)<br>util: parseFile(File)<br>api: submitAnalysis(payload)"]
+    EB_chat -- "route /chat — outside AppLayout, own full-height layout" --> ChatPage["ChatPage — src/pages/Chat.page.jsx<br>props: none  custom hooks: none<br>stores READ: analysisStore.analysisId, .datasetName<br>api: streamChatMessage, sendChatMessage, getChatHistory"]
+    DashboardPage -- one per insight item --> InsightCard["InsightCard<br>src/components/dashboard/InsightCard.jsx<br>props: insight { severity, type, title, description? }"]
+    UploadPage --> FileDropZone["FileDropZone<br>src/components/upload/FileDropZone.jsx<br>props: onFile(File or null) void<br>validates: ext in [.csv .xlsx .xls], size max 5 MB"]
+    ChatPage -- one per message in state --> MessageBubble["MessageBubble<br>src/components/chat/MessageBubble.jsx<br>props: message { id, role, content, timestamp, isStreaming? }<br>ReactMarkdown + remark-gfm for assistant messages<br>inner: CopyButton (clipboard API, shown on hover)"]
+    ChatPage -- "shown while awaiting non-streaming reply" --> TypingIndicator["TypingIndicator<br>src/components/chat/TypingIndicator.jsx<br>props: none — 3-dot bounce (CSS keyframe dot-bounce)"]
+
+     main:::root
+     App:::root
+     useAuth:::hook
+     EB_root:::comp
+     EB_reg:::comp
+     EB_login:::comp
+     ProtectedRoute:::comp
+     LoginPage:::page
+     RegisterPage:::page
+     AppLayout:::comp
+     EB_chat:::comp
+     EB_dash:::comp
+     EB_upload:::comp
+     DashboardPage:::page
+     UploadPage:::page
+     ChatPage:::page
+     InsightCard:::comp
+     FileDropZone:::comp
+     MessageBubble:::comp
+     TypingIndicator:::comp
+    classDef page fill:#dbeafe,stroke:#2563eb,color:#1e40af
+    classDef comp fill:#d1fae5,stroke:#059669,color:#064e3b
+    classDef hook fill:#fef3c7,stroke:#d97706,color:#78350f
+    classDef root fill:#f8fafc,stroke:#94a3b8,color:#334155

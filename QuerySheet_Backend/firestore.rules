@@ -1,0 +1,61 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Admin SDK only.
+    match /authSessions/{sessionId} {
+      allow read, write: if false;
+    }
+
+    // Admin SDK only.
+    match /userCredentials/{userId} {
+      allow read, write: if false;
+    }
+
+    match /users/{userId} {
+      // Owner can read root user document only with verified email.
+      allow read: if request.auth != null
+        && request.auth.uid == userId
+        && request.auth.token.email_verified == true;
+
+      // Root user doc is backend-managed.
+      allow write: if false;
+
+      // User-managed profile sub-document with constrained updates.
+      match /profile/data {
+        allow read: if request.auth != null && request.auth.uid == userId;
+        allow update: if request.auth != null
+          && request.auth.uid == userId
+          && request.resource.data.uid == resource.data.uid
+          && request.resource.data.schemaVersion == resource.data.schemaVersion
+          && request.resource.data.diff(resource.data).changedKeys().hasOnly([
+            "bio",
+            "timezone",
+            "preferredChartType",
+            "updatedAt"
+          ]);
+        allow create, delete: if false;
+      }
+
+      // Analyses are owner-readable; all writes through backend API.
+      match /analyses/{analysisId} {
+        allow read: if request.auth != null
+          && request.auth.uid == userId
+          && request.auth.token.email_verified == true;
+        allow write: if false;
+
+        // Chat messages are owner-readable; writes through backend API.
+        match /messages/{messageId} {
+          allow read: if request.auth != null
+            && request.auth.uid == userId
+            && request.auth.token.email_verified == true;
+          allow write: if false;
+        }
+      }
+
+      // Insight cache is backend-only.
+      match /insightCache/{dataHash} {
+        allow read, write: if false;
+      }
+    }
+  }
+}

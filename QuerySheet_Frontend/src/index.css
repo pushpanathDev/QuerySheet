@@ -1,0 +1,131 @@
+@import "tailwindcss";
+
+/* ────────────────────────────────────────────────────────────────────────────
+   Design tokens — single source of truth for the whole app.
+   Tailwind v4 turns these into utilities, e.g.:
+     --color-ink     → text-ink / bg-ink / border-ink
+     --color-body    → text-body
+     --font-display  → font-display
+   Changing a value here re-themes every page at once.
+   ──────────────────────────────────────────────────────────────────────────── */
+@theme {
+  /* Typography */
+  --font-sans: "Inter", "Schibsted Grotesk", system-ui, sans-serif;
+  --font-display: "Fustat", "Inter", sans-serif;
+
+  /* Text */
+  --color-ink: #000000;          /* headings / primary text            */
+  --color-body: #505050;         /* body copy                          */
+  --color-muted: #8a8a8a;        /* secondary / captions               */
+
+  /* Surfaces */
+  --color-surface: #f8f8f8;      /* page background                    */
+  --color-line: #ececec;         /* hairline borders                   */
+
+  /* Brand */
+  --color-accent: #0e1311;       /* near-black — primary buttons/chips */
+  --color-brand: #16a34a;        /* green — interactive / positive     */
+  --color-brand-soft: #dcfce7;   /* green tint — badges / fills        */
+  --color-lime: #5ae14c;         /* hero lime — highlights             */
+}
+
+/* ── Base typography — applied globally for a uniform look ─────────────────── */
+@layer base {
+  body {
+    font-family: var(--font-sans);
+    color: var(--color-body);
+    background-color: var(--color-surface);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  h1, h2, h3, h4 {
+    font-family: var(--font-display);
+    color: var(--color-ink);
+    letter-spacing: -0.02em;
+  }
+}
+
+/* ── Motion keyframes ─────────────────────────────────────────────────────── */
+@keyframes bounce-dot {
+  0%, 80%, 100% { transform: translateY(0); opacity: 0.4; }
+  40%           { transform: translateY(-6px); opacity: 1; }
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes fade-in-up {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes scale-in {
+  from { opacity: 0; transform: scale(0.96); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+@keyframes shimmer {
+  100% { transform: translateX(100%); }
+}
+
+@keyframes pulse-ring {
+  0%   { transform: scale(0.8); opacity: 0.7; }
+  70%  { transform: scale(1.6); opacity: 0; }
+  100% { transform: scale(1.6); opacity: 0; }
+}
+
+@keyframes spin-slow {
+  to { transform: rotate(360deg); }
+}
+
+/* ── Motion utility classes ───────────────────────────────────────────────── */
+.dot-bounce { animation: bounce-dot 1.2s infinite ease-in-out; }
+.dot-bounce:nth-child(1) { animation-delay: 0s; }
+.dot-bounce:nth-child(2) { animation-delay: 0.2s; }
+.dot-bounce:nth-child(3) { animation-delay: 0.4s; }
+
+.animate-fade-in    { animation: fade-in 0.4s ease-out both; }
+.animate-fade-in-up { animation: fade-in-up 0.5s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.animate-scale-in   { animation: scale-in 0.35s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.animate-pulse-ring { animation: pulse-ring 1.8s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+.animate-spin-slow  { animation: spin-slow 1.4s linear infinite; }
+
+/* Skeleton shimmer block */
+.skeleton {
+  position: relative;
+  overflow: hidden;
+  background-color: #ededed;
+}
+.skeleton::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.6),
+    transparent
+  );
+  animation: shimmer 1.6s infinite;
+}
+
+/* Keep the streaming caret inline at the end of the last rendered paragraph */
+.md-stream { display: inline; }
+.md-stream p:last-of-type { display: inline; margin-bottom: 0; }
+
+/* Respect reduced-motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  .animate-fade-in,
+  .animate-fade-in-up,
+  .animate-scale-in,
+  .animate-pulse-ring,
+  .animate-spin-slow,
+  .skeleton::after,
+  .dot-bounce {
+    animation: none !important;
+  }
+}
