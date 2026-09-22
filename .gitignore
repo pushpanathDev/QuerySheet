@@ -1,0 +1,19 @@
+# Local environment and secrets
+.env
+.env.*
+!.env.example
+
+# Dependencies
+node_modules/
+
+# Frontend build output
+QuerySheet_Frontend/dist/
+
+# Logs and local tooling
+*.log
+.DS_Store
+.vscode/
+
+# Internal documentation and architecture artifacts
+/docs/
+/QuerySheet_Arch/
